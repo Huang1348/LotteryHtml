@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Excel 名单抽奖机</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      color: #fff;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .top-header-bar {
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 32px;
+      padding: 18px 0 0 0;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 10;
+      background: transparent;
+      flex-wrap: wrap;
+    }
+    .top-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .blue-btn {
+      font-size: 1em;
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #fff;
+      color: #6e8efb;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 0;
+      transition: background 0.2s;
+      width: auto;
+      min-width: 60px;
+      max-width: 100%;
+      box-sizing: border-box;
+      outline: none;
+    }
+    #audioToggle {
+      background: none;
+      color: #fff;
+      font-size: 26px;
+      text-align: left;
+      padding: 0 0 0 2px;
+      border: none;
+      cursor: pointer;
+      width: auto;
+      margin-top: 0;
+    }
+    .top-note, .audio-note {
+      font-size: 0.95em;
+      border-radius: 8px;
+      padding: 4px 10px;
+      min-width: 60px;
+      max-width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.13);
+      display: block;
+      word-break: break-all;
+    }
+    .top-note {
+      color: #ffd700;
+      background: rgba(255,255,255,0.18);
+      font-family: 'Arial Black','Arial',sans-serif;
+      letter-spacing: 1px;
+    }
+    .audio-note {
+      color: #ffe4b5;
+      background: rgba(0,0,0,0.13);
+      font-family: 'Arial',sans-serif;
+      letter-spacing: 0.5px;
+    }
+    .header {
+      font-family: 'Arial Black',sans-serif;
+      font-size: 3em;
+      text-align: center;
+      padding-top: 32px;
+      margin-bottom: 40px;
+      z-index: 1;
+      position: relative;
+      pointer-events: none;
+    }
+    .main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 2vw;
+      width: 100%;
+    }
+    .input-row {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    .slots {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 30px;
+      min-height: 100px;
+    }
+    .slot {
+      min-width: 180px;
+      min-height: 60px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      font-weight: bold;
+      color: #fff;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+      backdrop-filter: blur(10px);
+      padding: 0 24px;
+      transition: background 0.3s;
+    }
+    .history-glass {
+      width: 92vw;
+      max-width: 800px;
+      min-height: 80px;
+      background: rgba(255,255,255,0.13);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      margin: 32px auto 0 auto;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+      padding: 0;
+      overflow: hidden;
+    }
+    .history-title {
+      width: 100%;
+      text-align: center;
+      font-size: 1.2em;
+      color: #fff;
+      letter-spacing: 2px;
+      font-weight: bold;
+      opacity: 0.85;
+      user-select: none;
+      padding: 12px 0 0 0;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: row;
+      gap: 12px;
+      padding: 12px 24px 16px 24px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      width: 100%;
+      box-sizing: border-box;
+      white-space: nowrap;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.3) transparent;
+    }
+    .history-list::-webkit-scrollbar { height: 8px; }
+    .history-list::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+    }
+    .history-list::-webkit-scrollbar-track { background: transparent; }
+    .history-item {
+      font-size: 1.1em;
+      color: #fff;
+      background: rgba(110,142,251,0.18);
+      border-radius: 8px;
+      padding: 6px 16px;
+      min-width: 90px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .history-label {
+      color: #ffd700;
+      font-weight: bold;
+      margin-right: 6px;
+    }
+    .upload-label {
+      background: #fff;
+      color: #6e8efb;
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 8px;
+      transition: background 0.2s;
+      border: none;
+      display: inline-block;
+    }
+    .upload-label input[type="file"] {
+      display: none;
+    }
+    @media (max-width: 900px) {
+      .header { font-size: 2em; padding-top: 24px; }
+      .top-header-bar { gap: 18px; padding-top: 10px; }
+      .blue-btn, .upload-label { font-size: 0.95em; padding: 6px 8px; min-width: 48px; }
+      .top-note, .audio-note { font-size: 0.9em; padding: 3px 6px; min-width: 40px; }
+      .slot { min-width: 120px; font-size: 1.2em; }
+    }
+    @media (max-width: 600px) {
+      .header { font-size: 1.2em; padding-top: 10px; }
+      .top-header-bar { gap: 8px; padding-top: 4px; flex-direction: column; align-items: center;}
+      .blue-btn, .upload-label { font-size: 0.9em; padding: 4px 4px; min-width: 36px; }
+      .top-note, .audio-note { font-size: 0.85em; padding: 2px 2px; min-width: 28px; }
+      .top-group { flex-direction: row; gap: 4px; }
+      .slot { min-width: 80px; font-size: 1em; }
+    }
+  </style>
+  <!-- xlsx.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="top-header-bar">
+    <div class="top-group">
+      <button id="luckBgmBtn" class="blue-btn">More bgm</button>
+      <span class="top-note">good luck buff 好运来</span>
+    </div>
+    <div class="top-group">
+      <button id="audioToggle" title="Toggle Sound">🔈</button>
+      <span class="audio-note">Animation Sound Effect</span>
+    </div>
+  </div>
+
+  <audio id="bgm" src="game_bgm.mp3" preload="auto"></audio>
+  <audio id="luckBgm" src="祖海好运来.mp3" preload="auto" loop></audio>
+
+  <div class="header">Excel名单抽奖机</div>
+
+  <div class="main">
+    <div class="input-row">
+      <label class="upload-label">
+        上传Excel名单
+        <input type="file" id="fileInput" accept=".xlsx,.xls" />
+      </label>
+      <button id="resetBtn" class="blue-btn" disabled>重置</button>
+    </div>
+    <div class="slots" id="slots">
+      <div class="slot" id="nameSlot">请上传名单</div>
+    </div>
+    <button class="start-btn blue-btn" id="startBtn" disabled>开始抽奖</button>
+    <div class="history-glass">
+      <div class="history-title">中奖历史</div>
+      <div class="history-list" id="historyHorizontal"></div>
+    </div>
+  </div>
+
+  <script>
+    // 音乐和声音控制
+    const $ = id => document.getElementById(id);
+    const luckBgmBtn = $('luckBgmBtn'), audioToggle = $('audioToggle');
+    const luckBgm = $('luckBgm'), bgm = $('bgm');
+    luckBgm.volume = 0.3;
+    let luckBgmPlaying = false, soundEnabled = true;
+    const soundIcons = ['🔈','🔉','🔊','🔔','🎵','🎶'];
+    let soundIconIdx = 0;
+    audioToggle.textContent = soundIcons[soundIconIdx];
+
+    luckBgmBtn.onclick = () => {
+      luckBgmPlaying ? (luckBgm.pause(), luckBgm.currentTime=0, luckBgmBtn.textContent='More bgm') :
+        (luckBgm.play(), luckBgmBtn.textContent='bgm on');
+      luckBgmPlaying = !luckBgmPlaying;
+    };
+    luckBgm.addEventListener('pause', () => {
+      luckBgmPlaying = false;
+      luckBgmBtn.textContent = 'More bgm';
+    });
+
+    audioToggle.onclick = () => {
+      soundEnabled = !soundEnabled;
+      soundIconIdx = (soundIconIdx + 1) % soundIcons.length;
+      audioToggle.textContent = soundEnabled ? soundIcons[soundIconIdx] : '🔇';
+    };
+
+    document.body.addEventListener('click', () => { bgm.play().then(()=>bgm.pause()); }, { once: true });
+
+    function playSoundSection(start, end) {
+      if (!soundEnabled) return;
+      try {
+        bgm.pause(); bgm.currentTime = start;
+        const handler = () => { if (bgm.currentTime >= end) { bgm.pause(); bgm.removeEventListener('timeupdate', handler); } };
+        bgm.addEventListener('timeupdate', handler);
+        bgm.addEventListener('seeked', function play() { bgm.play(); bgm.removeEventListener('seeked', play); });
+      } catch (err) { }
+    }
+
+    // Excel名单抽奖逻辑
+    const fileInput = $('fileInput');
+    const resetBtn = $('resetBtn');
+    const startBtn = $('startBtn');
+    const nameSlot = $('nameSlot');
+    const historyHorizontal = $('historyHorizontal');
+
+    let nameList = [];
+    let availableNames = [];
+    let history = [];
+    let running = false;
+
+    fileInput.addEventListener('change', handleFile, false);
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, {type: 'binary'});
+        // 默认取第一个sheet的第一列
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+        // 只取第一列且去除空行
+        nameList = json.map(row => row[0]).filter(x => !!x && typeof x === 'string' && x.trim() !== '');
+        if (nameList.length === 0) {
+          nameSlot.textContent = '名单为空';
+          startBtn.disabled = true;
+          resetBtn.disabled = true;
+          return;
+        }
+        availableNames = [...nameList];
+        history = [];
+        renderHistory();
+        nameSlot.textContent = '准备抽奖';
+        startBtn.disabled = false;
+        resetBtn.disabled = false;
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    resetBtn.onclick = () => {
+      if (nameList.length === 0) return;
+      playSoundSection(0, 0.5);
+      availableNames = [...nameList];
+      history = [];
+      renderHistory();
+      nameSlot.textContent = '准备抽奖';
+      startBtn.disabled = false;
+    };
+
+    function renderHistory() {
+      historyHorizontal.innerHTML = '';
+      history.forEach((name, idx) => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<span class="history-label">第${idx + 1}轮:</span>${name}`;
+        historyHorizontal.appendChild(div);
+      });
+    }
+
+    function animateName(finalName, callback) {
+      running = true;
+      startBtn.disabled = true;
+      if (soundEnabled) playSoundSection(3, 8);
+      const duration = 3000;
+      const names = availableNames.length > 20 ? availableNames : nameList;
+      let start = null;
+      function roll(ts) {
+        if (!start) start = ts;
+        const elapsed = ts - start;
+        const progress = Math.min(elapsed / duration, 1);
+        if (elapsed % 60 < 20) {
+          const val = names[Math.floor(Math.random() * names.length)];
+          nameSlot.textContent = val;
+        }
+        if (progress < 1) {
+          requestAnimationFrame(roll);
+        } else {
+          nameSlot.textContent = finalName;
+          running = false;
+          startBtn.disabled = availableNames.length === 0;
+          callback && callback();
+        }
+      }
+      requestAnimationFrame(roll);
+    }
+
+    startBtn.onclick = () => {
+      if (running || availableNames.length === 0) return;
+      playSoundSection(0, 0.5);
+      setTimeout(() => {
+        const idx = Math.floor(Math.random() * availableNames.length);
+        const name = availableNames.splice(idx, 1)[0];
+        animateName(name, () => {
+          history.push(name);
+          renderHistory();
+        });
+      }, 500);
+    };
+
+    // 初始化
+    nameSlot.textContent = '请上传名单';
+    startBtn.disabled = true;
+    resetBtn.disabled = true;
+    renderHistory();
+  </script>
+</body>
+</html>

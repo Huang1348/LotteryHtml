@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>@by joey who cannot join into this game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="top-header-bar">
+    <div class="top-group">
+      <button id="luckBgmBtn" class="blue-btn">More bgm</button>
+      <span class="top-note">Good Luck Buff 好運來</span>
+    </div>
+    <div class="top-group">
+      <button id="audioToggle" title="Toggle Sound">🎵</button>
+      <span class="audio-note">Animation Sound Effect</span>
+    </div>
+  </div>
+
+  <audio id="bgm" src="game_bgm.mp3" preload="auto"></audio>
+  <audio id="luckBgm" src="祖海好运来.mp3" preload="auto" loop></audio>
+
+  <div class="header">Slot Machine Lottery</div>
+
+  <div class="main">
+    <div class="input-row">
+      <input type="number" id="maxInput" min="1" max="999" placeholder="Enter number (1-999)">
+      <button id="resetBtn" class="blue-btn">Reset</button>
+    </div>
+    <div class="slots" id="slots">
+      <div class="slot" id="hundreds"><span class="number">9</span></div>
+      <div class="slot" id="tens"><span class="number">9</span></div>
+      <div class="slot" id="ones"><span class="number">9</span></div>
+    </div>
+    <button class="start-btn blue-btn" id="startBtn" disabled>Start</button>
+    <div class="history-glass">
+      <div class="history-title">History</div>
+      <div class="history-list" id="historyHorizontal"></div>
+    </div>
+  </div>
+
+  <script src="Animation.js"></script>
+</body>
+</html>
