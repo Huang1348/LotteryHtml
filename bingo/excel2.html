@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Excel Name List Lottery</title>
+  <style>
+    :root {
+      --primary: #c8d2e5;
+      --primary-dark: #9ba3aa;
+      --secondary: #764ba2;
+      --accent: #f093fb;
+      --success: #f6b2b2;
+      --warning: #fbe19f;
+      --danger: #f2f5ae;
+      --glass: rgba(255,255,255,0.25);
+      --glass-blur: blur(20px);
+      --text-dark: #2d3748;
+      --text-light: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100vh; margin: 0; padding: 0;
+      font-family: 'Inter', 'SF Pro Display', 'Segoe UI', 'PingFang SC', Arial, sans-serif;
+      background: linear-gradient(135deg, #d4eefa 0%, #5e8fb8 50%, #fecbd4 100%);
+      background-attachment: fixed;
+      overflow: hidden;
+    }
+    body {
+      display: flex; flex-direction: column; height: 100vh; position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(240, 147, 251, 0.2) 0%, transparent 50%);
+      z-index: -1;
+    }
+    .header {
+      width: 100%;
+      text-align: center;
+      padding: 0.7rem 1rem 0.4rem;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(25px);
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .company-name {
+      font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0 0 0.2rem 0;
+      letter-spacing: 0.1em;
+      color: var(--text-light);
+      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .game-title {
+      font-size: clamp(0.8rem, 2vw, 1.1rem);
+      color: rgba(255,255,255,0.9);
+      margin: 0;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+    .container {
+      display: flex;
+      flex: 1;
+      padding: 1rem;
+      min-height: 0;
+      gap: 1.5rem;
+    }
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      justify-content: center;
+      align-items: center;
+    }
+    .right-sidebar {
+      width: 30vw;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .lottery-display {
+      width: 100%;
+      max-width: 700px;
+      height: 55vh;
+      min-height: 400px;
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      border-radius: 32px;
+      border: 2px solid rgba(255,255,255,0.3);
+      box-shadow: 
+        0 18px 50px -12px rgba(0,0,0,0.25),
+        0 6px 20px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      transition: height 0.2s;
+    }
+    .lottery-display::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
+    }
+    .name-slot {
+      font-size: 8vh;
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      text-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      letter-spacing: 0.08em;
+      transition: all 0.3s cubic-bezier(.4,2,.6,1);
+      padding: 2rem 1rem;
+      overflow: hidden;
+      white-space: normal;
+      text-overflow: break-all;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      line-height: 1.1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+    .bottom-controls {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.1rem;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(25px);
+      flex-shrink: 0;
+      border: none;
+    }
+    .control-button,
+    .start-button {
+      padding: 0.8rem 1.5rem;
+      background: linear-gradient(135deg, #c2ccde 0%, #2b6cb0 100%);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease, border-color 0.2s;
+      letter-spacing: 0.02em;
+      box-shadow: 
+        0 4px 15px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 2px solid transparent;
+      border-radius: 8px;
+    }
+    .start-button {
+      background: linear-gradient(135deg, #2b6cb0 0%, #4f8cff 100%);
+      color: #fff;
+      font-weight: 700;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      border-radius: 50px;
+      white-space: nowrap;
+      box-shadow: 
+        0 10px 32px rgba(79, 172, 254, 0.3),
+        0 4px 12px rgba(0,0,0,0.1);
+      padding: 1.3rem 3.2rem;
+      overflow: hidden;
+      position: relative;
+    }
+    .control-button:hover,
+    .start-button:hover {
+      border-color: #77adca;
+      transform: translateY(-2px);
+      box-shadow: 
+        0 6px 20px rgba(0,0,0,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+    .start-button:active {
+      transform: translateY(-1px);
+    }
+    .start-button:disabled {
+      background: linear-gradient(135deg, #cbd5e0 0%, #cfdef1 100%);
+      color: #bbc9dd;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+      border-color: transparent;
+    }
+    .start-button:disabled::before { display: none; }
+    .control-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-color: transparent;
+    }
+    .upload-button { position: relative; overflow: hidden; }
+    .upload-button input[type="file"] {
+      position: absolute;
+      left: -9999px; opacity: 0;
+    }
+    .status-display {
+      flex: 1;
+      max-width: 320px;
+      min-height: 50px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(255,255,255,0.25);
+      padding: 0.8rem 1.2rem;
+      color: var(--text-light);
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+      margin-left: 1.2rem;
+      margin-right: 0;
+      border-radius: 15px;
+    }
+    .history-section {
+      height: 100%;
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      border-radius: 18px;
+      border: 2px solid rgba(255,255,255,0.25);
+      box-shadow: 
+        0 8px 25px rgba(0,0,0,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .history-title {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #fff;
+      font-weight: 700;
+      padding: 1rem;
+      background: rgba(255,255,255,0.1);
+      margin: 0;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+    .history-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      padding: 1.2rem;
+      overflow-y: auto;
+      min-height: 0;
+    }
+    .history-list::-webkit-scrollbar { width: 6px; }
+    .history-list::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+    }
+    .history-list::-webkit-scrollbar-track { background: transparent; }
+    .history-item {
+      background: linear-gradient(135deg, rgba(110,142,251,0.2) 0%, rgba(167,119,227,0.2) 100%);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      padding: 0.6rem 1rem;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      flex-shrink: 0;
+    }
+    .history-label { color: #ffd700; font-weight: bold; margin-right: 0.5rem; }
+    .empty-history {
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+      padding: 2rem 1rem;
+      font-style: italic;
+    }
+    #audioToggle {
+      position: fixed;
+      left: 18px; bottom: 18px;
+      z-index: 100;
+      padding: 0.3em 1.1em 0.3em 0.7em;
+      gap: 0.5em;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      max-width: 90vw;
+      background: none;
+      border: none;
+      font-size: 1.7em;
+      cursor: pointer;
+      color: #24b0ef;
+      transition: color 0.2s;
+    }
+    #audioToggle.active { color: #f85570; }
+
+    /* 弹窗样式 */
+    .modal-mask {
+      position: fixed;
+      z-index: 9999;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      background: rgba(30,40,80,0.33);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+      backdrop-filter: blur(1.5px);
+    }
+    .modal {
+      background: rgba(255,255,255,0.92);
+      border-radius: 24px;
+      box-shadow: 0 8px 44px rgba(110,142,251,0.22);
+      overflow: hidden;
+      width: 60vw;
+      max-width: 540px;
+      min-width: 260px;
+      padding: 2.5em 2em 2em;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+      animation: popIn 0.22s cubic-bezier(0.4,2,0.6,1);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-title {
+      font-size: 1.45em;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #3f4688;
+      margin-bottom: 1em;
+      text-align: center;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1.2em;
+      right: 1.2em;
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      color: #888;
+      cursor: pointer;
+      z-index: 10;
+      transition: color 0.15s;
+    }
+    .modal-close:hover { color: #e44; }
+    .prize-list-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.4em;
+    }
+    .prize-list-table th,
+    .prize-list-table td {
+      padding: 0.45em 0.4em;
+      text-align: center;
+      border-bottom: 1px solid #e7ebf7;
+      background: none;
+    }
+    .prize-list-table th {
+      font-size: 1.05em;
+      color: #4a4a4a;
+    }
+    .prize-list-table td input {
+      width: 90%;
+      padding: 0.3em 0.5em;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #cdd3e1;
+      background: #f6f8fd;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.15s;
+    }
+    .prize-list-table td input:focus {
+      border-color: #4f8cff;
+    }
+    .prize-action-btn {
+      background: none;
+      border: none;
+      font-size: 1.15em;
+      padding: 0.2em 0.5em;
+      cursor: pointer;
+      color: #4f8cff;
+      transition: color 0.15s;
+      border-radius: 5px;
+    }
+    .prize-action-btn:hover { color: #e44; background: #f6f8fd; }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1.2em;
+      margin-top: 1em;
+    }
+    .modal-confirm-btn, .modal-cancel-btn {
+      padding: 0.7em 2.3em;
+      font-size: 1.05em;
+      font-weight: 700;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    .modal-confirm-btn {
+      background: linear-gradient(135deg, #2b6cb0 0%, #4f8cff 100%);
+      color: #fff;
+      border: 2px solid #2b6cb0;
+      transition: background 0.18s;
+    }
+    .modal-confirm-btn:hover { background: linear-gradient(135deg, #4f8cff 0%, #2b6cb0 100%); }
+    .modal-cancel-btn {
+      background: #e9eefa;
+      color: #4a4a4a;
+      border: 2px solid #cdd3e1;
+    }
+    @media (max-width: 1200px) {
+      .right-sidebar { width: 250px; }
+      .modal { width: 85vw; }
+    }
+    @media (max-width: 900px) {
+      .container { flex-direction: column; gap: 1rem; }
+      .main-content { flex: none; }
+      .right-sidebar { width: 100%; height: 200px; flex-shrink: 0; }
+      .bottom-controls { flex-direction: column; gap: 0.8rem; padding: 0.8rem; }
+      .bottom-controls > * { width: auto; min-width: 120px; }
+      .status-display { max-width: none; width: 100%; }
+      .modal { width: 98vw; padding: 1em 0.3em 1em; }
+    }
+    @media (max-width: 600px) {
+      .container { padding: 0.5rem; gap: 0.8rem; }
+      .lottery-display { height: 250px; min-height: 180px; }
+      .name-slot { padding: 1rem; font-size: clamp(1.5rem, 10vw, 2.7rem); }
+      .start-button { padding: 0.8rem 2rem; font-size: 1.1rem; }
+      .right-sidebar { height: 150px; }
+      .history-list { padding: 0.8rem; gap: 0.5rem; }
+      .history-item { font-size: 0.85rem; padding: 0.5rem 0.8rem; }
+    }
+    @media (max-width: 480px) {
+      .history-title { font-size: 1rem; padding: 0.8rem; }
+    }
+    @media (max-height: 700px) {
+      .container { gap: 0.5rem; }
+      .lottery-display { height: 250px; min-height: 180px; }
+    }
+  </style>
+  <!-- xlsx.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <!-- 音频文件 -->
+  <audio id="bgm" src="game_bgm.mp3" preload="auto"></audio>
+  <button id="audioToggle" title="Toggle Sound">🎵</button>
+  <div class="header">
+    <h1 class="company-name">ABC COMPANY</h1>
+    <p class="game-title">Annual Party •  Random Name</p>
+  </div>
+  <div class="container">
+    <div class="main-content">
+      <div class="lottery-display">
+        <div class="name-slot" id="nameSlot">???</div>
+      </div>
+      <button class="start-button" id="startBtn" disabled>Start Lottery</button>
+    </div>
+    <div class="right-sidebar">
+      <div class="history-section">
+        <div class="history-title">🏆 Winner History</div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-controls">
+    <label class="control-button upload-button">
+      📁 Upload Excel
+      <input type="file" id="fileInput" accept=".xlsx,.xls" />
+    </label>
+    <button class="control-button" id="resetBtn" disabled>🔄 Reset</button>
+    <div class="status-display" id="statusDisplay">Please upload Excel file</div>
+  </div>
+  <!-- 奖品设置弹窗 -->
+  <div id="prizeModalMask" class="modal-mask" style="display:none;">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" id="prizeModalClose" title="Close">&times;</button>
+      <div class="modal-title">🎁 Prize Setting</div>
+      <table class="prize-list-table" id="prizeTable">
+        <thead>
+          <tr>
+            <th style="width:3em;">#</th>
+            <th>Prize Name</th>
+            <th style="width:5em;">Count</th>
+            <th style="width:2.5em;"></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+      <button id="addPrizeBtn" class="prize-action-btn" type="button" style="font-size:1.17em;">
+        ➕ Add Prize
+      </button>
+      <div class="modal-footer">
+        <button class="modal-cancel-btn" id="prizeModalCancel">Cancel</button>
+        <button class="modal-confirm-btn" id="prizeModalOK">OK</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // 音频和声音控制
+    const $ = id => document.getElementById(id);
+    const audioToggle = $('audioToggle');
+    const bgm = $('bgm');
+    let soundEnabled = true;
+    audioToggle.onclick = () => {
+      soundEnabled = !soundEnabled;
+      audioToggle.textContent = soundEnabled ? '🎵' : '🔇';
+      audioToggle.classList.toggle('active', soundEnabled);
+    };
+    document.body.addEventListener('click', () => {
+      bgm.play().then(() => bgm.pause()).catch(() => {});
+    }, { once: true });
+    function playSoundSection(start, end) {
+      if (!soundEnabled) return;
+      try {
+        bgm.pause();
+        bgm.currentTime = start;
+        const handler = () => {
+          if (bgm.currentTime >= end) {
+            bgm.pause();
+            bgm.removeEventListener('timeupdate', handler);
+          }
+        };
+        bgm.addEventListener('timeupdate', handler);
+        bgm.addEventListener('seeked', function play() {
+          bgm.play().catch(() => {});
+          bgm.removeEventListener('seeked', play);
+        });
+      } catch (err) { }
+    }
+
+    // Excel名单抽奖逻辑
+    const fileInput = $('fileInput');
+    const resetBtn = $('resetBtn');
+    const startBtn = $('startBtn');
+    const nameSlot = $('nameSlot');
+    const historyList = $('historyList');
+    const statusDisplay = $('statusDisplay');
+    let nameList = [];
+    let availableNames = [];
+    let history = [];
+    let running = false;
+    let currentFileName = '';
+    let totalLeft = 0;
+
+    // 奖品相关
+    let prizeList = [];
+    let prizeDistribution = []; // [{prize, left, total}]
+    let currentPrizeIdx = 0; // 当前奖品序号
+    let prizeModalMask = $('prizeModalMask');
+    let prizeTable = $('prizeTable');
+    let addPrizeBtn = $('addPrizeBtn');
+    let prizeModalOK = $('prizeModalOK');
+    let prizeModalCancel = $('prizeModalCancel');
+    let prizeModalClose = $('prizeModalClose');
+
+    // 监听文件上传
+    fileInput.addEventListener('change', handleFile);
+
+    function showPrizeModal() {
+      fillPrizeTable(prizeList.length ? prizeList : [
+        {name: 'First Prize', count: 1},
+        {name: 'Second Prize', count: 2},
+        {name: 'Third Prize', count: 3}
+      ]);
+      prizeModalMask.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        prizeModalMask.querySelector('input')?.focus();
+      }, 200);
+    }
+    function hidePrizeModal() {
+      prizeModalMask.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    prizeModalClose.onclick = prizeModalCancel.onclick = hidePrizeModal;
+
+    addPrizeBtn.onclick = () => {
+      addPrizeRow();
+    };
+
+    function fillPrizeTable(list) {
+      const tbody = prizeTable.querySelector('tbody');
+      tbody.innerHTML = '';
+      list.forEach((prize, i) => addPrizeRow(prize, i+1));
+    }
+
+    function addPrizeRow(prize = {}, order = null) {
+      const tbody = prizeTable.querySelector('tbody');
+      const row = document.createElement('tr');
+      const idx = tbody.children.length+1;
+      row.innerHTML = `
+        <td>${order ?? idx}</td>
+        <td>
+          <input type="text" class="prize-name-input" value="${prize.name??''}" placeholder="Prize Name" maxlength="30" required />
+        </td>
+        <td>
+          <input type="number" min="1" step="1" class="prize-count-input" value="${prize.count??1}" style="width:4em;" />
+        </td>
+        <td>
+          <button class="prize-action-btn" type="button" title="Remove Prize">🗑</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+
+      // 绑定删除
+      row.querySelector('.prize-action-btn').onclick = () => {
+        tbody.removeChild(row);
+        updateOrderNumbers();
+      };
+    }
+
+    function updateOrderNumbers() {
+      const rows = prizeTable.querySelectorAll('tbody tr');
+      rows.forEach((tr, i) => tr.firstElementChild.textContent = i+1);
+    }
+
+    // 弹窗确认
+    prizeModalOK.onclick = () => {
+      const rows = prizeTable.querySelectorAll('tbody tr');
+      const list = [];
+      let totalPrizes = 0;
+      let error = "";
+      rows.forEach((tr, i) => {
+        const nameInput = tr.querySelector('.prize-name-input');
+        const countInput = tr.querySelector('.prize-count-input');
+        const name = nameInput.value.trim();
+        const count = parseInt(countInput.value, 10) || 0;
+        if (!name) error = "Prize name required";
+        if (count <= 0) error = "Prize count must be > 0";
+        if (list.some(p => p.name === name)) error = "Prize names must not repeat";
+        list.push({name, count});
+        totalPrizes += count;
+      });
+      if (list.length === 0) { error="At least one prize required"; }
+      if (error) {
+        alert(error);
+        return;
+      }
+
+      if (totalPrizes > availableNames.length) {
+        alert(
+          `Total prizes (${totalPrizes}) exceed the number of participants (${availableNames.length}).`
+        );
+        return;
+      }
+      prizeList = list;
+      // 制作抽奖分布
+      prizeDistribution = prizeList.map(p => ({prize: p.name, left: p.count, total: p.count}));
+      currentPrizeIdx = 0;
+      hidePrizeModal();
+      renderHistory();
+      updateStatus();
+      startBtn.disabled = false;
+      resetBtn.disabled = false;
+      startBtn.textContent = 'Start Lottery';
+      playSoundSection(0, 0.5);
+    };
+
+    // 关闭弹窗点mask
+    prizeModalMask.addEventListener('click', function(e){
+      if(e.target === prizeModalMask) hidePrizeModal();
+    });
+
+    // 处理Excel
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      playSoundSection(0, 0.5);
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, {type: 'binary'});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+        nameList = json.map(row => row[0]).filter(x => !!x && typeof x === 'string' && x.trim() !== '');
+        if (nameList.length === 0) {
+          nameSlot.textContent = '  ?    ?    ?   ';
+          statusDisplay.textContent = 'Empty name list';
+          startBtn.disabled = true;
+          resetBtn.disabled = true;
+          return;
+        }
+        availableNames = [...nameList];
+        history = [];
+        currentFileName = file.name;
+        // 打开奖品设置弹窗
+        showPrizeModal();
+        renderHistory();
+        nameSlot.textContent = '  ?    ?    ?   ';
+        startBtn.disabled = true;
+        resetBtn.disabled = false;
+        startBtn.textContent = 'Start Lottery';
+        updateStatus();
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    // 复位
+    resetBtn.onclick = () => {
+      playSoundSection(0, 0.5);
+      nameList = [];
+      availableNames = [];
+      history = [];
+      prizeList = [];
+      prizeDistribution = [];
+      currentPrizeIdx = 0;
+      renderHistory();
+      nameSlot.textContent = '  ?    ?    ?   ';
+      statusDisplay.textContent = 'Please upload Excel file';
+      startBtn.disabled = true;
+      resetBtn.disabled = true;
+      startBtn.textContent = 'Start Lottery';
+      fileInput.value = '';
+      running = false;
+      currentFileName = '';
+      updateStatus();
+    };
+
+    function renderHistory() {
+      historyList.innerHTML = '';
+      if (history.length === 0) {
+        historyList.innerHTML = '<div class="empty-history">No winners yet</div>';
+        return;
+      }
+      history.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<span class="history-label">${item.prize}:</span>${item.name}`;
+        historyList.appendChild(div);
+      });
+    }
+
+    function updateStatus() {
+      // 状态栏显示当前奖品与剩余数量
+      let txt = '';
+      if (currentFileName && availableNames.length) {
+        if (prizeDistribution.length && currentPrizeIdx < prizeDistribution.length) {
+          let p = prizeDistribution[currentPrizeIdx];
+          txt = `${currentFileName} | ${availableNames.length} left | Prize: "${p.prize}" (${p.left}/${p.total})`;
+        } else if (prizeDistribution.length) {
+          txt = `${currentFileName} | ${availableNames.length} left | All prizes sent`;
+        } else {
+          txt = `${currentFileName} | ${availableNames.length} left`;
+        }
+      } else {
+        txt = 'Please upload Excel file';
+      }
+      statusDisplay.textContent = txt;
+    }
+
+    function animateName(finalName, callback) {
+      running = true;
+      startBtn.disabled = true;
+      playSoundSection(5, 9);
+      let stopped = false;
+      let startTime = performance.now();
+      let duration = 2600;
+      let animationNames;
+      if (availableNames.length > 0) {
+        animationNames = availableNames.concat([finalName]);
+      } else {
+        animationNames = [finalName];
+      }
+      animationNames = Array.from(new Set(animationNames));
+      function easeOutQuad(t) { return t * (2 - t); }
+      function roll(ts) {
+        if (!stopped) {
+          let elapsed = ts - startTime;
+          let progress = Math.min(elapsed / duration, 1);
+          let eased = easeOutQuad(progress);
+          let frameInterval = 60 + eased * 120;
+          if (elapsed % frameInterval < 16) {
+            const randomName = animationNames[Math.floor(Math.random() * animationNames.length)];
+            nameSlot.textContent = randomName;
+          }
+          if (progress >= 1) {
+            nameSlot.textContent = finalName;
+            stopped = true;
+            updateStatus();
+            running = false;
+            startBtn.disabled = (availableNames.length === 0) || (currentPrizeIdx >= prizeDistribution.length);
+            if (availableNames.length === 0 || currentPrizeIdx >= prizeDistribution.length) {
+              nameSlot.textContent = '🎉 All prizes drawn!';
+              startBtn.textContent = 'Lottery Completed';
+            }
+            callback && callback();
+          } else {
+            requestAnimationFrame(roll);
+          }
+        }
+      }
+      requestAnimationFrame(roll);
+    }
+
+    startBtn.onclick = () => {
+      if (running || availableNames.length === 0 || currentPrizeIdx >= prizeDistribution.length) return;
+      playSoundSection(0, 0.5);
+      setTimeout(() => {
+        // 抽当前奖品
+        let curPrize = prizeDistribution[currentPrizeIdx];
+        if (!curPrize || !curPrize.left) {
+          // 跳到下一个有剩余的奖品
+          while (currentPrizeIdx < prizeDistribution.length && !prizeDistribution[currentPrizeIdx].left) {
+            currentPrizeIdx++;
+          }
+          curPrize = prizeDistribution[currentPrizeIdx];
+        }
+        if (!curPrize || !curPrize.left) {
+          updateStatus();
+          startBtn.disabled = true;
+          startBtn.textContent = 'Lottery Completed';
+          return;
+        }
+        const idx = Math.floor(Math.random() * availableNames.length);
+        const selectedName = availableNames.splice(idx, 1)[0];
+        animateName(selectedName, () => {
+          curPrize.left--;
+          history.push({prize: curPrize.prize, name: selectedName});
+          renderHistory();
+          setTimeout(() => {
+            const lastItem = historyList.lastElementChild;
+            if (lastItem) {
+              lastItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 100);
+          // 如果当前奖品发完，切到下一个
+          if (curPrize.left <= 0) {
+            currentPrizeIdx++;
+          }
+          updateStatus();
+          // 自动禁用按钮
+          if (availableNames.length === 0 || currentPrizeIdx >= prizeDistribution.length) {
+            startBtn.disabled = true;
+            startBtn.textContent = 'Lottery Completed';
+            nameSlot.textContent = '🎉 All prizes drawn!';
+          } else {
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start Lottery';
+          }
+        });
+      }, 500);
+    };
+
+    renderHistory();
+    nameSlot.textContent = '  ?    ?    ?   ';
+    statusDisplay.textContent = 'Please upload Excel file';
+    updateStatus();
+  </script>
+</body>
+</html>
